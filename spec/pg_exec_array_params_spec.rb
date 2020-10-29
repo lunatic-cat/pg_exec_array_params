@@ -1,11 +1,15 @@
 # frozen_string_literal: true
 
-RSpec.describe PgExecArrayParams do
-  it 'has a version number' do
-    expect(PgExecArrayParams::VERSION).not_to be nil
-  end
+require 'spec_helper'
 
-  it 'does something useful' do
-    expect(1).to eq(1)
+RSpec.describe PgExecArrayParams, :pg do
+  include_context 'shared users table'
+
+  describe '#exec_array_params' do
+    it 'works with pg' do
+      expect(exec_array_params(
+               conn, 'select * from users where age in ($1)', [min_age]
+             )).to fetch_rows [{ 'age' => min_age.to_s }]
+    end
   end
 end
