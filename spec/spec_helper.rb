@@ -3,7 +3,7 @@
 require 'simplecov'
 SimpleCov.start
 
-if ENV['CI']
+if ENV['CI'] && ENV['CODECOV_TOKEN']
   require 'codecov'
   SimpleCov.formatter = SimpleCov::Formatter::Codecov
 end
@@ -32,7 +32,7 @@ RSpec.shared_context 'shared sql methods' do
   end
 end
 
-RSpec.shared_context 'shared users table' do
+RSpec.shared_context 'shared tables' do
   include_context 'shared sql methods'
 
   let(:min_age) { 10 }
@@ -71,6 +71,10 @@ RSpec.configure do |config|
 
   config.expect_with :rspec do |c|
     c.syntax = :expect
+  end
+
+  config.before(:suite) do
+    PG::Connection.include(PgExecArrayParams)
   end
 
   config.include PgExecArrayParams, pg: true
