@@ -34,7 +34,47 @@ RSpec.describe PgExecArrayParams, :pg do
 
       it 'raises error to leave one ref' do
         expect do
-          exec_array_params(conn, sql, [[min_age, max_row]])
+          exec_array_params(conn, sql, [[min_age, max_age]])
+        end.to raise_error(PgExecArrayParams::Error)
+      end
+    end
+
+    RSpec.shared_examples 'with primitive and array' do |pattern|
+      where_sql = "age #{format pattern, '$1'} OR age #{format pattern, '$2'}"
+
+      describe "with pattern #{where_sql}" do
+        let(:sql) { "select * from users where #{where_sql} order by age" }
+
+        it 'works array last' do
+          expect(exec_array_params(conn, sql, [min_age, [min_age, max_age]])).to fetch_rows [min_row, max_row]
+        end
+
+        it 'works array first' do
+          expect(exec_array_params(conn, sql, [[min_age, max_age], min_age])).to fetch_rows [min_row, max_row]
+        end
+      end
+    end
+
+    it_behaves_like 'with primitive and array', '= %s'
+    it_behaves_like 'with primitive and array', 'IN (%s)'
+
+    describe 'random arrays of random size' do
+      let(:refs_amount) { 10 }
+      let(:sql_parts) { refs_amount.times.map { |x| format ['age = %s', 'age IN (%s)'].sample, "$#{x}" } }
+      let(:array_params) { rand(1..4).times.map { [min_age, max_age].sample } }
+
+      let(:sql) { "select * from users where #{sql_parts.join(' OR ')} order by age" }
+      let(:params) { refs_amount.times.map { [min_age, max_age, array_params, array_params].sample } }
+
+      it 'works' do
+        expect(exec_array_params(conn, sql, params)).to fetch_rows [min_row, max_row]
+      end
+    end
+
+    describe 'non-primitives inside arrays' do
+      it 'raises error' do
+        expect do
+          exec_array_params(conn, sql, [[min_age, max_age, {}]])
         end.to raise_error(PgExecArrayParams::Error)
       end
     end

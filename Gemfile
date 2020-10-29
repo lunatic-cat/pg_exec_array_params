@@ -6,3 +6,8 @@ source 'https://rubygems.org'
 gemspec
 
 gem 'codecov', require: false
+
+group :benchmark do
+  gem 'activerecord', require: false
+  gem 'benchmark-ips', require: false
+end

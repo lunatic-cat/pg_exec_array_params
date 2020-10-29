@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 module PgExecArrayParams
-  # Query
   class Query
     PARAM_REF = 'ParamRef'
     REXPR = 'rexpr'
@@ -20,16 +19,20 @@ module PgExecArrayParams
       @args = args
     end
 
+    def exec_params(conn, *args)
+      conn.exec_params(sql, binds, *args)
+    end
+
     def sql
       return query unless should_rebuild?
 
       @sql || (rebuild_query! && @sql)
     end
 
-    def params
+    def binds
       return args unless should_rebuild?
 
-      @params || (rebuild_query! && @params)
+      @binds || (rebuild_query! && @binds)
     end
 
     private
@@ -40,26 +43,36 @@ module PgExecArrayParams
 
     def rebuild_query!
       @param_idx = 0
-      @offset = 0
-      @params = []
+      @ref_idx = 1
+      @binds = []
       each_param_ref do |value|
-        # puts({value: value}.inspect)
+        # puts({value_before: value}.inspect)
 
         if args[@param_idx].is_a? Array
           value[KIND] = IN_KIND
           value[REXPR] = []
-          args[@param_idx].map do |param|
-            raise "Param: #{param.inspect} not primitive" if param.respond_to?(:each)
+          args[@param_idx].each do |param|
+            raise Error, "Param: #{param.inspect} not primitive" if param.respond_to?(:each)
 
-            value[REXPR] << { PARAM_REF => { NUMBER => @param_idx + @offset + 1 } }
-            @params << param
-            @offset += 1
+            value[REXPR] << { PARAM_REF => { NUMBER => @ref_idx } }
+            @binds << param
+            @ref_idx += 1
           end
+        else
+          value[REXPR][PARAM_REF][NUMBER] = @ref_idx
+          @ref_idx += 1
+
+          # nested_refs == 1 unwraps, wrap it back
+          value[REXPR] = [value[REXPR]] if value[KIND] == IN_KIND
+
+          @binds << args[@param_idx]
         end
 
         @param_idx += 1
+        # puts({value_after_: value}.inspect)
       end
       @sql = tree.deparse
+      # puts({sql: @sql, binds: @binds}.inspect)
       true
     end
 
