@@ -56,7 +56,7 @@ def query
   Benchmark.ips do |x|
     x.report('activerecord#to_a') { User.where(age: params).to_a }
     x.report('activerecord#pluck') { User.where(age: params).pluck(:id, :age) }
-    x.report('exec_array_params')  { conn.pg_exec_array_params(query2, params2).to_a }
+    x.report('exec_array_params')  { conn.exec_array_params(query2, params2).to_a }
     x.report('pg') { conn.exec_params(query, params).to_a }
     x.compare!
   end
