@@ -6,6 +6,12 @@ source 'https://rubygems.org'
 gemspec
 
 gem 'codecov', require: false
+gem 'pry-byebug', '~> 3.9'
+gem 'rake', '~> 12.0'
+gem 'rspec-github', '~> 2.3'
+gem 'rubocop', '~> 1.0'
+gem 'rubocop-rspec', '~> 2.0.0.pre'
+gem 'simplecov', '~> 0.19'
 
 group :benchmark do
   gem 'activerecord', require: false

@@ -25,11 +25,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency('pg_query', '~> 1.2')
 
   spec.add_development_dependency('pg', ENV.fetch('PG_GEM_VERSION', '~> 0'))
-  spec.add_development_dependency('pry-byebug', '~> 3.9')
-  spec.add_development_dependency('rake', '~> 12.0')
   spec.add_development_dependency('rspec', '~> 3.0')
-  spec.add_development_dependency('rspec-github', '~> 2.3')
-  spec.add_development_dependency('rubocop', '~> 1.0')
-  spec.add_development_dependency('rubocop-rspec', '~> 2.0.0.pre')
-  spec.add_development_dependency('simplecov', '~> 0.19')
 end
