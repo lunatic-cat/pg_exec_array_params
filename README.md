@@ -1,6 +1,7 @@
 # PgExecArrayParams
 
 ![](https://github.com/lunatic-cat/pg_exec_array_params/workflows/ci/badge.svg)
+[![Gem Version](https://badge.fury.io/rb/pg_exec_array_params.svg)](https://badge.fury.io/rb/pg_exec_array_params)
 
 Use same parametized query and put `Array<T>` instead of any `T`
 
