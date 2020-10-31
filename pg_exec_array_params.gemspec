@@ -7,6 +7,7 @@ Gem::Specification.new do |spec|
   spec.version       = PgExecArrayParams::VERSION
   spec.authors       = ['Vlad Bokov']
   spec.email         = ['vlad@lunatic.cat']
+  spec.license       = 'MIT'
 
   spec.summary       = 'PG::Connection#exec_params with arrays'
   spec.description   = 'Escape each array element inside PG::Connection#exec_params properly'
