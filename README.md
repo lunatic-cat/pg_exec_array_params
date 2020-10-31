@@ -2,6 +2,7 @@
 
 ![](https://github.com/lunatic-cat/pg_exec_array_params/workflows/ci/badge.svg)
 [![Gem Version](https://badge.fury.io/rb/pg_exec_array_params.svg)](https://badge.fury.io/rb/pg_exec_array_params)
+[![codecov](https://codecov.io/gh/lunatic-cat/pg_exec_array_params/branch/master/graph/badge.svg?token=X5K67X3V0Z)](undefined)
 
 Use same parametized query and put `Array<T>` instead of any `T`
 
