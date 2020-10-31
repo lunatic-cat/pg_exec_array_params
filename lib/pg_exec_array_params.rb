@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'pg'
-require 'pg_query'
 require 'pg_exec_array_params/query'
 require 'pg_exec_array_params/version'
 
@@ -14,8 +12,10 @@ module PgExecArrayParams
   end
 
   def self.included(base)
-    base.define_method :pg_exec_array_params do |*args|
-      PgExecArrayParams.exec_array_params(self, *args)
+    return unless base.name == 'PG::Connection'
+
+    base.define_method :exec_array_params do |sql, params, *args|
+      Query.new(sql, params).exec_params(self, *args)
     end
   end
 end

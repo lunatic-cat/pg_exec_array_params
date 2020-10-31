@@ -82,7 +82,7 @@ RSpec.describe PgExecArrayParams, :pg do
 
   describe '#included' do
     it 'works like #exec_array_params' do
-      expect(conn.pg_exec_array_params(sql, [min_age])).to fetch_rows [min_row]
+      expect(conn.exec_array_params(sql, [min_age])).to fetch_rows [min_row]
     end
   end
 end

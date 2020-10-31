@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'pg_query'
+
 module PgExecArrayParams
   class Query
     PARAM_REF = 'ParamRef'

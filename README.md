@@ -45,7 +45,7 @@ PgExecArrayParams.exec_array_params(conn, 'select * from users where id = $1', [
 ```ruby
 PG::Connection.include(PgExecArrayParams) # once in initializer
 
-conn.pg_exec_array_params('select * from users where id = $1', [[1,2]])
+conn.exec_array_params('select * from users where id = $1', [[1,2]])
 => [{"id" => 1}, {"id" => 2}]
 ```
 
