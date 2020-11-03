@@ -29,15 +29,11 @@ module PgExecArrayParams
     end
 
     def sql
-      return query unless should_rebuild?
-
-      @sql || (rebuild_query! && @sql)
+      should_rebuild? ? (rebuild_query! && @sql) : query
     end
 
     def binds
-      return args unless should_rebuild?
-
-      @binds || (rebuild_query! && @binds)
+      should_rebuild? ? args.flatten(1) : args
     end
 
     def columns
@@ -47,42 +43,31 @@ module PgExecArrayParams
     private
 
     def should_rebuild?
-      args.any? { |param| param.is_a?(Array) }
+      args.any? do |param|
+        param.is_a?(Array) && (param.none? do |item|
+          item.respond_to?(:each) && raise(Error, "Param includes not primitive: #{item.inspect}")
+        end)
+      end
     end
 
     def rebuild_query!
-      @param_idx = 0
-      @ref_idx = 1
-      @binds = []
-      @columns = []
       each_param_ref do |value|
         # puts({value_before: value}.inspect)
-
-        if args[@param_idx].is_a? Array
+        old_ref_idx = value[REXPR][PARAM_REF][NUMBER] - 1 # one based
+        new_ref_idx = ref_idx[old_ref_idx]
+        if new_ref_idx.is_a?(Array)
           value[KIND] = IN_KIND
-          value[REXPR] = []
-          args[@param_idx].each do |param|
-            raise Error, "Param: #{param.inspect} not primitive" if param.respond_to?(:each)
-
-            value[REXPR] << { PARAM_REF => { NUMBER => @ref_idx } }
-            @binds << param
-            @ref_idx += 1
+          value[REXPR] = Range.new(*new_ref_idx).map do |param_ref_idx|
+            { PARAM_REF => { NUMBER => param_ref_idx } }
           end
         else
-          value[REXPR][PARAM_REF][NUMBER] = @ref_idx
-          @ref_idx += 1
-
+          value[REXPR][PARAM_REF][NUMBER] = new_ref_idx
           # nested_refs == 1 unwraps, wrap it back
           value[REXPR] = [value[REXPR]] if value[KIND] == IN_KIND
-
-          @binds << args[@param_idx]
         end
-
-        @param_idx += 1
         # puts({value_after_: value}.inspect)
       end
       @sql = tree.deparse
-      # puts({sql: @sql, binds: @binds}.inspect)
       true
     end
 
@@ -90,29 +75,42 @@ module PgExecArrayParams
       @tree ||= PgQuery.parse(query)
     end
 
-    def each_param_ref
+    def each_param_ref(&block)
       tree.send :treewalker!, tree.tree do |_expr, key, value, _location|
         case key
         when TARGET_LIST
-          @columns += value.map { |node| Column.from_res_target(node[RES_TARGET]) }.compact
+          handle_target_list_node(value)
         when A_EXPR
-          if assign_param_via_eq?(value)
-            yield value
-          elsif (nested_refs = assign_param_via_in?(value))
-            if nested_refs == 1
-              value[REXPR] = value[REXPR].first
-              yield value
-            else
-              message = [
-                'Cannot splice multiple references, leave the only one:',
-                query,
-                refs_underline(value)
-              ].join("\n")
-              raise Error, message
-            end
-          end
+          handle_target_aexpr_node(value, &block)
         end
       end
+    end
+
+    def handle_target_aexpr_node(value, &block)
+      if assign_param_via_eq?(value)
+        block.call(value)
+      elsif (nested_refs = assign_param_via_in?(value))
+        if nested_refs == 1
+          value[REXPR] = value[REXPR].first
+          block.call(value)
+        else
+          message = [
+            'Cannot splice multiple references, leave the only one:',
+            query,
+            refs_underline(value)
+          ].join("\n")
+          raise Error, message
+        end
+      end
+    end
+
+    def handle_target_list_node(value)
+      @columns ||= []
+      @columns += value.map { |node| Column.from_res_target(node[RES_TARGET]) }.compact
+    end
+
+    def ref_idx
+      @ref_idx ||= SqlRefIndex.new(args)
     end
 
     def refs_underline(value)

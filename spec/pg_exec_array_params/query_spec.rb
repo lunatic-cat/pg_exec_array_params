@@ -14,15 +14,28 @@ RSpec.describe PgExecArrayParams::Query do
     end
   end
 
-  describe '#rebuild_query!' do
-    let(:query) { 'select * from t1 where a1 = $1 and a2 = $2 and a3 = $3 and a4 = $4' }
-    let(:params) { [1, [2, 3], 'foo', %w[bar baz]] }
-
-    let(:sql) { 'SELECT * FROM "t1" WHERE "a1" = $1 AND "a2" IN ($2, $3) AND "a3" = $4 AND "a4" IN ($5, $6)' }
-
+  RSpec.shared_examples 'builds proper sql & binds' do
     it 'works', :aggregate_failures do
       expect(subject.sql).to eq sql
       expect(subject.binds).to eq params.flatten
+    end
+  end
+
+  describe '#rebuild_query!' do
+    let(:params) { [1, [2, 3], 'foo', %w[bar baz]] }
+
+    context 'when ref params' do
+      let(:query) { 'select * from t1 where a1 = $1 and a2 = $2 and a3 = $3 and a4 = $4' }
+      let(:sql) { 'SELECT * FROM "t1" WHERE "a1" = $1 AND "a2" IN ($2, $3) AND "a3" = $4 AND "a4" IN ($5, $6)' }
+
+      it_behaves_like 'builds proper sql & binds'
+    end
+
+    context 'when ref params reversed' do
+      let(:query) { 'select * from t1 where a3 = $3 and a1 = $1 and a4 = $4 and a2 = $2' }
+      let(:sql) { 'SELECT * FROM "t1" WHERE "a3" = $4 AND "a1" = $1 AND "a4" IN ($5, $6) AND "a2" IN ($2, $3)' }
+
+      it_behaves_like 'builds proper sql & binds'
     end
   end
 end
