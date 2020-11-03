@@ -42,6 +42,16 @@ PgExecArrayParams.exec_array_params(conn, 'select * from users where id = $1', [
 => [{"id" => 1}, {"id" => 2}]
 ```
 
+## Batteries
+
+This can also provide more info than plain `pg_query` gem:
+
+```ruby
+sql = 'with y as (select * from s) SELECT x, y.y, z.z as z from x join z on z.z = x join y on y.y = x'
+PgExecArrayParams::Query.new(sql, []).columns.map(&:name)
+=> ['x', 'y', 'z']
+```
+
 ## Integration with 'pg' gem
 
 ```ruby

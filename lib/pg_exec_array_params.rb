@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'pg_exec_array_params/query'
+require 'pg_exec_array_params/column'
 require 'pg_exec_array_params/version'
 
 module PgExecArrayParams
