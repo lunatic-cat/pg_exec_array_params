@@ -1,12 +1,25 @@
 # frozen_string_literal: true
 
+require 'pg_exec_array_params/error'
+require 'pg_exec_array_params/rewriters'
+require 'pg_exec_array_params/rewriters/node'
+require 'pg_exec_array_params/rewriters/res_target'
+require 'pg_exec_array_params/rewriters/a_expr'
 require 'pg_exec_array_params/sql_ref_index'
 require 'pg_exec_array_params/column'
 require 'pg_exec_array_params/query'
 require 'pg_exec_array_params/version'
 
 module PgExecArrayParams
-  class Error < StandardError; end
+  PARAM_REF = 'ParamRef'
+  REXPR = 'rexpr'
+  NUMBER = 'number'
+  LOCATION = 'location'
+
+  # AExpr['kind']
+  EQ_KIND = 0
+  IN_KIND = 7
+
   module_function
 
   def exec_array_params(conn, sql, params, *args)

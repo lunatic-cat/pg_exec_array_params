@@ -70,6 +70,13 @@ module PgQueryParser
            .fetch('SelectStmt').fetch('targetList')
            .first.fetch('ResTarget')
   end
+
+  def squish(str)
+    str
+      .gsub(/\A[[:space:]]+/, '')
+      .gsub(/[[:space:]]+\z/, '')
+      .gsub(/[[:space:]]+/, ' ')
+  end
 end
 
 RSpec.configure do |config|

@@ -10,12 +10,16 @@ RSpec.describe PgExecArrayParams, :pg do
   let(:max_row) { { 'age' => max_age.to_s } }
 
   RSpec.shared_examples 'replacement handler' do
-    it 'working like usual' do
-      expect(exec_array_params(conn, sql, [min_age])).to fetch_rows [min_row]
+    context 'with params = [min_age]' do
+      it 'working like usual' do
+        expect(exec_array_params(conn, sql, [min_age])).to fetch_rows [min_row]
+      end
     end
 
-    it 'working with array' do
-      expect(exec_array_params(conn, sql, [[min_age, max_age]])).to fetch_rows [min_row, max_row]
+    context 'with params = [[min_age, max_age]]' do
+      it 'working with array' do
+        expect(exec_array_params(conn, sql, [[min_age, max_age]])).to fetch_rows [min_row, max_row]
+      end
     end
   end
 
@@ -32,10 +36,20 @@ RSpec.describe PgExecArrayParams, :pg do
     describe 'with IN ($1, $2)' do
       let(:sql) { 'select * from users where age in ($1, $2) order by age' }
 
-      it 'raises error to leave one ref' do
-        expect do
-          exec_array_params(conn, sql, [[min_age, max_age]])
-        end.to raise_error(PgExecArrayParams::Error)
+      context 'with params = [[min_age, max_age]]' do
+        let(:fail_msg) do
+          <<~MSG.strip
+            Leave only `= $1` and pass an array
+            select * from users where age in ($1, $2) order by age
+                                              ^----^
+          MSG
+        end
+
+        it 'raises error to leave one ref' do
+          expect do
+            exec_array_params(conn, sql, [[min_age, max_age]])
+          end.to raise_error(PgExecArrayParams::Error, fail_msg)
+        end
       end
     end
 
@@ -61,7 +75,7 @@ RSpec.describe PgExecArrayParams, :pg do
     describe 'random arrays of random size' do
       let(:refs_amount) { 10 }
       let(:sql_parts) { refs_amount.times.map { |x| format ['age = %s', 'age IN (%s)'].sample, "$#{x + 1}" }.shuffle }
-      let(:array_params) { rand(1..4).times.map { [min_age, max_age].sample } }
+      let(:array_params) { rand(2..9).times.map { [min_age, max_age].sample } }
 
       let(:sql) { "select * from users where #{sql_parts.join(' OR ')} order by age" }
       let(:params) { refs_amount.times.map { [min_age, max_age, array_params, array_params].sample } }
@@ -76,6 +90,17 @@ RSpec.describe PgExecArrayParams, :pg do
         expect do
           exec_array_params(conn, sql, [[min_age, max_age, {}]])
         end.to raise_error(PgExecArrayParams::Error)
+      end
+    end
+
+    describe 'select with constants' do
+      let(:sql) { 'select $2, * from users where age = $1 order by age' }
+
+      it 'works' do
+        expect(exec_array_params(conn, sql, [[min_age, max_age], [42, 73]]).to_a).to eq [
+          { 'age' => min_age.to_s, 'array' => '{42,73}' },
+          { 'age' => max_age.to_s, 'array' => '{42,73}' }
+        ]
       end
     end
   end
