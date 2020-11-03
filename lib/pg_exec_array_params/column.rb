@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'pg_query'
-
 module PgExecArrayParams
   class Column
     attr_reader :table, :column_name, :as_name

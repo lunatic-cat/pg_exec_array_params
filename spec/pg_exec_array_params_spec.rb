@@ -60,7 +60,7 @@ RSpec.describe PgExecArrayParams, :pg do
 
     describe 'random arrays of random size' do
       let(:refs_amount) { 10 }
-      let(:sql_parts) { refs_amount.times.map { |x| format ['age = %s', 'age IN (%s)'].sample, "$#{x}" } }
+      let(:sql_parts) { refs_amount.times.map { |x| format ['age = %s', 'age IN (%s)'].sample, "$#{x + 1}" }.shuffle }
       let(:array_params) { rand(1..4).times.map { [min_age, max_age].sample } }
 
       let(:sql) { "select * from users where #{sql_parts.join(' OR ')} order by age" }
