@@ -8,14 +8,29 @@ Use same parametized query and put `Array<T>` instead of any `T`
 
 ## Example
 
-```ruby
-query = 'select * from t1 where a1 = $1 and a2 = $2 and a3 = $3 and a4 = $4'
-params = [1, [2, 3], 'foo', ['bar', 'baz']]
+### Inside `WHERE` part
 
-# PG::Connection.exec_params called with:
-# 'SELECT * FROM "t1" WHERE "a1" = $1 AND "a2" IN ($2, $3) AND "a3" = $4 AND "a4" IN ($5, $6)'
-# [1, 2, 3, "foo", "bar", "baz"]
+```ruby
+# Instead of:
+# PG::Connection.exec_params(
+#   'SELECT * FROM "t1" WHERE "a1" = $1 AND "a3" IN ($4, $5, $6) AND "a2" IN ($2, $3)',
+#   [1, 2, 3, "foo", "bar", "baz"]
+# )
+query = 'select * from t1 where a1 = $1 and a3 = $3 and a2 = $2'
+params = [1, [2, 3], ['foo', 'bar', 'baz']]
 PgExecArrayParams.exec_array_params(conn, query, params)
+```
+
+### Inside `SELECT` part
+
+```ruby
+# Instead of:
+# PG::Connection.exec_params(
+#   'SELECT ARRAY[$1, $2]'
+#   [1, 2]
+# )
+PgExecArrayParams.exec_array_params(conn, 'select $1', [[1, 2]])
+=> [{"array"=>"{1,2}"}]
 ```
 
 ## Problem
@@ -47,9 +62,9 @@ PgExecArrayParams.exec_array_params(conn, 'select * from users where id = $1', [
 This can also provide more info than plain `pg_query` gem:
 
 ```ruby
-sql = 'with y as (select * from s) SELECT x, y.y, z.z as z from x join z on z.z = x join y on y.y = x'
+sql = 'with y as (select * from s) select x1, y.y1, z.z as z1 from x join z on z.z = x join y on y.y = x'
 PgExecArrayParams::Query.new(sql, []).columns.map(&:name)
-=> ['x', 'y', 'z']
+=> ['x1', 'y1', 'z1']
 ```
 
 ## Integration with 'pg' gem
