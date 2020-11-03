@@ -9,6 +9,7 @@ gem 'codecov', require: false
 gem 'pry-byebug', '~> 3.9'
 gem 'rake', '~> 12.0'
 gem 'rspec-github', '~> 2.3'
+gem 'rspec-its', '~> 1.3'
 gem 'rubocop', '~> 1.0'
 gem 'rubocop-rspec', '~> 2.0.0.pre'
 gem 'simplecov', '~> 0.19'

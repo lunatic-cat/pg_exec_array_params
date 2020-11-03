@@ -14,6 +14,9 @@ module PgExecArrayParams
     EQ_KIND = 0
     IN_KIND = 7
 
+    TARGET_LIST = 'targetList'
+    RES_TARGET = 'ResTarget'
+
     attr_reader :query, :args
 
     def initialize(query, args = [])
@@ -37,6 +40,10 @@ module PgExecArrayParams
       @binds || (rebuild_query! && @binds)
     end
 
+    def columns
+      @columns || (rebuild_query! && @columns)
+    end
+
     private
 
     def should_rebuild?
@@ -47,6 +54,7 @@ module PgExecArrayParams
       @param_idx = 0
       @ref_idx = 1
       @binds = []
+      @columns = []
       each_param_ref do |value|
         # puts({value_before: value}.inspect)
 
@@ -84,7 +92,10 @@ module PgExecArrayParams
 
     def each_param_ref
       tree.send :treewalker!, tree.tree do |_expr, key, value, _location|
-        if key == A_EXPR
+        case key
+        when TARGET_LIST
+          @columns += value.map { |node| Column.from_res_target(node[RES_TARGET]) }.compact
+        when A_EXPR
           if assign_param_via_eq?(value)
             yield value
           elsif (nested_refs = assign_param_via_in?(value))

@@ -9,6 +9,7 @@ if ENV['CI'] && ENV['CODECOV_TOKEN']
 end
 
 require 'bundler/setup'
+require 'rspec/its'
 require 'pry-byebug'
 require 'pg'
 
@@ -62,6 +63,15 @@ RSpec::Matchers.define :fetch_rows do |expected|
   diffable
 end
 
+module PgQueryParser
+  def parse_res_target(sql)
+    PgQuery.parse(sql).tree[0]
+           .fetch('RawStmt').fetch('stmt')
+           .fetch('SelectStmt').fetch('targetList')
+           .first.fetch('ResTarget')
+  end
+end
+
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = '.rspec_status'
@@ -78,4 +88,5 @@ RSpec.configure do |config|
   end
 
   config.include PgExecArrayParams, pg: true
+  config.include PgQueryParser
 end
