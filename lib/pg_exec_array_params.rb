@@ -20,6 +20,8 @@ module PgExecArrayParams
   EQ_KIND = 0
   IN_KIND = 7
 
+  class Optional; end
+
   module_function
 
   def exec_array_params(conn, sql, params, *args)

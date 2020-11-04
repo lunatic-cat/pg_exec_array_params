@@ -5,6 +5,8 @@ source 'https://rubygems.org'
 # Specify your gem's dependencies in pg_exec_array_params.gemspec
 gemspec
 
+gem 'rails'
+
 gem 'codecov', require: false
 gem 'pry-byebug', '~> 3.9'
 gem 'rake', '~> 12.0'
