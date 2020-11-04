@@ -16,11 +16,11 @@ module PgExecArrayParams
     end
 
     def sql
-      should_rebuild? ? (rebuild_query! && @sql) : query
+      should_rebuild? ? (@sql || (rebuild_query! && @sql)) : query
     end
 
     def binds
-      should_rebuild? ? args.flatten(1) : args
+      should_rebuild? ? (@binds ||= args.flatten(1)) : args
     end
 
     def columns

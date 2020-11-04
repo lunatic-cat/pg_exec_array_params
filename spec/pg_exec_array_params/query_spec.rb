@@ -55,6 +55,11 @@ RSpec.describe PgExecArrayParams::Query do
       let(:sql) { 'SELECT * FROM "t1" WHERE "a1" = $1 AND "a2" IN ($2, $3) AND "a3" = $4 AND "a4" IN ($5, $6)' }
 
       it_behaves_like 'builds proper sql & binds'
+
+      it 'memoizes sql & binds', :aggregate_failures do
+        expect(2.times.map { subject.sql }.last).to eq sql
+        expect(2.times.map { subject.binds }.last).to eq params.flatten
+      end
     end
 
     context 'when ref params are insufficient' do
