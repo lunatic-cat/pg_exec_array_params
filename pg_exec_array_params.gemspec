@@ -22,7 +22,7 @@ Gem::Specification.new do |spec|
   end
   spec.require_paths = ['lib']
 
-  spec.add_dependency('pg_query', '~> 1.2')
+  spec.add_dependency('pg_query', '~> 1')
 
   spec.add_development_dependency('pg', ENV.fetch('PG_GEM_VERSION', '~> 0'))
   spec.add_development_dependency('rspec', '~> 3.0')
